@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}TalentScanner - Analysis Report for {{ match.resume.filename }}{% endblock %}
+
+{% block content %}
+<!-- Back Navigation -->
+<div style="margin-bottom: 32px;">
+    <a href="{{ url_for('main.job_details', job_id=match.job_id) }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left-short" style="font-size: 18px; vertical-align: middle;"></i> Back to Position Ranking
+    </a>
+</div>
+
+<div class="report-grid">
+    <!-- Left Column: Circular Score Meter -->
+    <div class="report-summary-box">
+        <div class="circle-progress-container">
+            <div class="circle-progress">
+                <svg class="circle-svg">
+                    <circle class="circle-bg" cx="60" cy="60" r="50"></circle>
+                    <circle class="circle-bar" cx="60" cy="60" r="50" 
+                            stroke="{% if match.similarity_score >= 75 %}var(--success){% elif match.similarity_score >= 50 %}var(--warning){% else %}var(--danger){% endif %}"
+                            stroke-dasharray="314.15" 
+                            stroke-dashoffset="{{ 314.15 - (314.15 * match.similarity_score / 100) }}"></circle>
+                </svg>
+                <div class="circle-text">{{ match.similarity_score|int }}%</div>
+            </div>
+            <h3 style="font-size: 16px; font-weight: 700; margin-top: 16px; color: var(--text-primary);">Match Fitness Score</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+                Evaluated: {{ match.created_at.strftime('%b %d, %Y') }}
+            </p>
+            <div>
+                {% if analysis.is_ai_powered %}
+                    <span class="badge badge-ai"><i class="bi bi-stars"></i> Gemini AI Report</span>
+                {% else %}
+                    <span class="badge badge-local"><i class="bi bi-cpu"></i> Keyword Pattern</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Deep Insights Breakdown -->
+    <div class="report-details-box">
+        <!-- Candidate Title Header -->
+        <div class="report-section" style="padding: 24px;">
+            <span style="font-size: 11px; color: var(--primary); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Candidate Assessment File</span>
+            <h1 style="font-size: 22px; font-weight: 700; margin: 4px 0 8px 0; color: var(--text-primary);">
+                <i class="bi bi-file-earmark-person" style="color: var(--primary); margin-right: 8px;"></i>{{ match.resume.filename }}
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 14px;">
+                Pipeline Context: <strong>{{ match.job.title }}</strong>
+            </p>
+        </div>
+
+        <!-- Fit Summary -->
+        <div class="report-section">
+            <h3><i class="bi bi-chat-square-quote-fill" style="color: var(--primary); margin-right: 8px;"></i>Executive Summary</h3>
+            <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.7; white-space: pre-line;">
+                {{ analysis.summary or "Summary statistics could not be loaded." }}
+            </p>
+        </div>
+
+        <!-- Skills Matrix -->
+        <div class="report-section">
+            <h3><i class="bi bi-cpu-fill" style="color: var(--primary); margin-right: 8px;"></i>Domain Skills Checklist</h3>
+            <div style="margin-bottom: 24px;">
+                <h4 style="font-size: 13px; font-weight: 600; color: var(--success); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-check-circle-fill"></i> Matched Core Skills ({{ analysis.matched_skills|length }})
+                </h4>
+                <div class="skills-tags">
+                    {% for skill in analysis.matched_skills %}
+                        <span class="skill-tag matched"><i class="bi bi-check"></i> {{ skill }}</span>
+                    {% else %}
+                        <span style="font-size: 13px; color: var(--text-muted);">No matching specialized keywords detected.</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div>
+                <h4 style="font-size: 13px; font-weight: 600; color: var(--danger); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-x-circle-fill"></i> Missing/Required Gaps ({{ analysis.missing_skills|length }})
+                </h4>
+                <div class="skills-tags">
+                    {% for skill in analysis.missing_skills %}
+                        <span class="skill-tag missing"><i class="bi bi-x"></i> {{ skill }}</span>
+                    {% else %}
+                        <span style="font-size: 13px; color: var(--text-muted);">Excellent! No critical skill gaps identified.</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Alignments -->
+        <div class="report-section">
+            <h3><i class="bi bi-patch-check-fill" style="color: var(--primary); margin-right: 8px;"></i>Candidate Strengths</h3>
+            <ul class="bullet-list list-strengths">
+                {% for strength in analysis.strengths %}
+                    <li>{{ strength }}</li>
+                {% else %}
+                    <li style="color: var(--text-muted); list-style: none; padding-left: 0;">No strengths mapped for this profile.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Mismatches -->
+        <div class="report-section">
+            <h3><i class="bi bi-exclamation-triangle-fill" style="color: var(--primary); margin-right: 8px;"></i>Gaps & Mismatches</h3>
+            <ul class="bullet-list list-gaps">
+                {% for gap in analysis.weaknesses_or_gaps %}
+                    <li>{{ gap }}</li>
+                {% else %}
+                    <li style="color: var(--text-muted); list-style: none; padding-left: 0;">No major alignments or credentials mismatches flagged.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Action Plan -->
+        <div class="report-section">
+            <h3><i class="bi bi-lightbulb-fill" style="color: var(--primary); margin-right: 8px;"></i>Resume Recommendations</h3>
+            <ul class="bullet-list list-tips">
+                {% for tip in analysis.improvement_tips %}
+                    <li>{{ tip }}</li>
+                {% else %}
+                    <li style="color: var(--text-muted); list-style: none; padding-left: 0;">No active recommendations.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,6 +3,6 @@ services:
     name: flask-app
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
+    startCommand: gunicorn wsgi:app
     branch: main
     runtime: python

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Resume & Job Matcher{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-container">
+            <a href="{{ url_for('main.index') }}" class="brand">
+                <i class="bi bi-rocket-takeoff-fill" style="color: var(--primary);"></i>
+                <span>Talent<span class="brand-accent">Scanner</span></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('main.index') }}" class="nav-link {% if request.path == '/' or request.path.startswith('/job/') and not request.path.endswith('/history') %}active{% endif %}"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('main.history') }}" class="nav-link {% if request.path == '/history' %}active{% endif %}"><i class="bi bi-clock-history"></i> Match History</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- System Alerts / Notifications -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="alerts-container">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }}">
+                  {% if category == 'success' %}
+                    <i class="bi bi-check-circle-fill"></i>
+                  {% elif category == 'danger' or category == 'error' %}
+                    <i class="bi bi-exclamation-octagon-fill"></i>
+                  {% elif category == 'warning' %}
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                  {% else %}
+                    <i class="bi bi-info-circle-fill"></i>
+                  {% endif %}
+                  <div>{{ message }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer style="margin-top: 80px; text-align: center; color: var(--text-muted); font-size: 13px;">
+        <p>&copy; 2026 TalentScanner. Built for modern high-performance recruitment teams.</p>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

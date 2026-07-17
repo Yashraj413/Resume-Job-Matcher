@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}TalentScanner - Recruiter Dashboard{% endblock %}
+
+{% block content %}
+<!-- Dashboard Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Active Openings</h3>
+            <div class="stat-value">{{ total_jobs }}</div>
+        </div>
+        <div class="stat-icon"><i class="bi bi-briefcase-fill"></i></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Resumes Analyzed</h3>
+            <div class="stat-value">{{ total_resumes }}</div>
+        </div>
+        <div class="stat-icon"><i class="bi bi-file-earmark-person-fill"></i></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-info">
+            <h3>Average Match Score</h3>
+            <div class="stat-value">{{ avg_score }}%</div>
+        </div>
+        <div class="stat-icon"><i class="bi bi-graph-up-arrow"></i></div>
+    </div>
+</div>
+
+<div class="dashboard-layout">
+    <!-- Left Column: Create Position -->
+    <div class="card">
+        <div class="card-title">
+            <span><i class="bi bi-plus-circle-fill" style="color: var(--primary); margin-right: 8px;"></i>Create New Position</span>
+        </div>
+        <form action="{{ url_for('main.create_job') }}" method="POST">
+            <div class="form-group">
+                <label for="title" class="form-label">Position Title</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Lead Machine Learning Engineer" required>
+            </div>
+            <div class="form-group">
+                <label for="description_text" class="form-label">Job Description & Requirements</label>
+                <textarea id="description_text" name="description_text" class="form-control" rows="10" placeholder="Paste the job description, core responsibilities, key technologies, and qualifications here..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="bi bi-shield-plus"></i> Initialize Recruitment Pipeline
+            </button>
+        </form>
+    </div>
+
+    <!-- Right Column: Active Job Profiles -->
+    <div class="card">
+        <div class="card-title">
+            <span><i class="bi bi-folder-fill" style="color: var(--primary); margin-right: 8px;"></i>Active Job Openings</span>
+            <span class="badge badge-local">{{ jobs|length }} Active</span>
+        </div>
+        
+        {% if jobs %}
+            <div style="max-height: 480px; overflow-y: auto; padding-right: 4px;">
+                {% for job in jobs %}
+                    <div class="job-list-item">
+                        <div class="job-meta">
+                            <h4>{{ job.title }}</h4>
+                            <p>
+                                <i class="bi bi-calendar3"></i> {{ job.created_at.strftime('%b %d, %Y') }}
+                                <span style="margin: 0 8px;">•</span>
+                                <i class="bi bi-people-fill"></i> {{ job.matches|length }} Candidates
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <a href="{{ url_for('main.job_details', job_id=job.id) }}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">
+                                <i class="bi bi-search"></i> View Candidates
+                            </a>
+                            <form action="{{ url_for('main.delete_job', job_id=job.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this job description? All candidate submissions and matching history will be permanently deleted.');" style="display: inline;">
+                                <button type="submit" class="btn btn-danger" style="padding: 8px 12px; font-size: 13px;" title="Delete Position">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-clipboard-x"></i></div>
+                <p style="margin-bottom: 8px; font-weight: 500;">No Active Positions</p>
+                <p style="font-size: 13px;">Fill out the form on the left to initialize a position and start matching resumes.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

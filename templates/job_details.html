@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}TalentScanner - {{ job.title }} Matches{% endblock %}
+
+{% block content %}
+<!-- Navigation and Actions Header -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+    <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Openings
+    </a>
+    <span style="color: var(--text-muted); font-size: 14px;">
+        Pipeline ID: <code style="color: var(--primary);">JOB-{{ job.id }}</code>
+    </span>
+</div>
+
+<!-- Layout: Job Description and Resume Upload -->
+<div class="dashboard-layout">
+    <!-- Left Column: Job Description and Uploader -->
+    <div>
+        <div class="card" style="padding: 24px;">
+            <div class="card-title">
+                <span><i class="bi bi-journal-text" style="color: var(--primary); margin-right: 8px;"></i>Position Requirements</span>
+            </div>
+            <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">{{ job.title }}</h2>
+            <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 16px; font-size: 14px; max-height: 250px; overflow-y: auto; color: var(--text-secondary); white-space: pre-line; margin-bottom: 24px;">
+                {{ job.description_text }}
+            </div>
+        </div>
+
+        <div class="card" style="padding: 24px;">
+            <div class="card-title">
+                <span><i class="bi bi-cloud-arrow-up-fill" style="color: var(--primary); margin-right: 8px;"></i>Upload Candidate Resumes</span>
+            </div>
+            <form id="upload-form" action="{{ url_for('main.upload_resumes', job_id=job.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="upload-zone" id="drop-zone">
+                    <div class="upload-icon"><i class="bi bi-file-earmark-arrow-up"></i></div>
+                    <div class="upload-text">Drag & drop candidate resumes here</div>
+                    <div class="upload-subtext">Supports PDF, DOCX, TXT (Max 16MB per file)</div>
+                    <input type="file" id="resumes" name="resumes" class="file-input" multiple accept=".pdf,.docx,.txt" required>
+                </div>
+                
+                <div id="file-list-container" style="display: none; margin-bottom: 20px;">
+                    <div class="form-label" style="display: flex; justify-content: space-between;">
+                        <span>Selected Files</span>
+                        <span id="file-count" style="color: var(--primary); font-weight: 600;">0 files</span>
+                    </div>
+                    <div class="selected-files" id="selected-files-list"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="bi bi-cpu"></i> Match Uploaded Resumes
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Column: Candidate Rankings -->
+    <div class="card">
+        <div class="card-title">
+            <span><i class="bi bi-trophy-fill" style="color: var(--primary); margin-right: 8px;"></i>Candidate Fit Rankings</span>
+            <span class="badge badge-ai">{{ matches|length }} Evaluated</span>
+        </div>
+
+        {% if matches %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Candidate Resume</th>
+                            <th>Analysis</th>
+                            <th>Fit Score</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for match in matches %}
+                            <tr>
+                                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ match.resume.filename }}">
+                                    <i class="bi bi-file-pdf-fill" style="color: var(--danger); font-size: 16px; margin-right: 8px; vertical-align: middle;"></i>
+                                    <strong>{{ match.resume.filename }}</strong>
+                                </td>
+                                <td>
+                                    {% set analysis_obj = None %}
+                                    {% if match.ai_analysis %}
+                                        {% set analysis_obj = match.ai_analysis | json_loads %}
+                                    {% endif %}
+                                    
+                                    <!-- Use python code execution helpers safely -->
+                                    {% if 'is_ai_powered' in match.ai_analysis %}
+                                        <span class="badge badge-ai"><i class="bi bi-stars"></i> Gemini AI</span>
+                                    {% else %}
+                                        <span class="badge badge-local"><i class="bi bi-cpu"></i> Keywords</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set score = match.similarity_score %}
+                                    <span class="score-badge {% if score >= 75 %}score-high{% elif score >= 50 %}score-med{% else %}score-low{% endif %}">
+                                        {{ score }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('main.match_report', match_id=match.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="bi bi-file-earmark-text"></i> Report
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-people"></i></div>
+                <p style="margin-bottom: 8px; font-weight: 500;">No Candidates Scanned Yet</p>
+                <p style="font-size: 13px;">Drag and drop resumes on the left to analyze candidate alignments with this job profile.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Scanner Loading Overlay (SaaS Visual Experience) -->
+<div id="loader-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(9, 12, 21, 0.9); backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center; flex-direction: column;">
+    <div style="position: relative; width: 120px; height: 120px; margin-bottom: 24px; border: 4px solid var(--border-color); border-radius: 50%; display: flex; justify-content: center; align-items: center;">
+        <!-- Glowing Ring -->
+        <div style="position: absolute; width: 120px; height: 120px; border: 4px solid transparent; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <i class="bi bi-file-earmark-medical" style="font-size: 40px; color: var(--primary); animation: pulse 1.5s ease-in-out infinite;"></i>
+    </div>
+    <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Analyzing Candidate Resumes</h3>
+    <p style="font-size: 14px; color: var(--text-muted); text-align: center; max-width: 320px;" id="loader-status">Extracting text streams...</p>
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+@keyframes pulse {
+    0%, 100% { opacity: 0.6; transform: scale(0.95); }
+    50% { opacity: 1; transform: scale(1.05); }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('resumes');
+    const fileListContainer = document.getElementById('file-list-container');
+    const fileCount = document.getElementById('file-count');
+    const selectedFilesList = document.getElementById('selected-files-list');
+    const uploadForm = document.getElementById('upload-form');
+    const loaderOverlay = document.getElementById('loader-overlay');
+    const loaderStatus = document.getElementById('loader-status');
+
+    // Trigger click on file input when clicking dropzone
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Highlight dropzone on drag events
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        }, false);
+    });
+
+    // Handle dropped files
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        updateFileList(files);
+    });
+
+    // Handle selected files
+    fileInput.addEventListener('change', function() {
+        updateFileList(this.files);
+    });
+
+    function updateFileList(files) {
+        selectedFilesList.innerHTML = '';
+        if (files.length > 0) {
+            fileListContainer.style.display = 'block';
+            fileCount.innerText = `${files.length} file${files.length > 1 ? 's' : ''}`;
+            
+            Array.from(files).forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                const sizeKB = (file.size / 1024).toFixed(1);
+                fileItem.innerHTML = `
+                    <span><i class="bi bi-file-earmark-check" style="color: var(--success); margin-right: 6px;"></i>${file.name}</span>
+                    <span style="color: var(--text-muted); font-size: 11px;">${sizeKB} KB</span>
+                `;
+                selectedFilesList.appendChild(fileItem);
+            });
+        } else {
+            fileListContainer.style.display = 'none';
+        }
+    }
+
+    // Trigger scanner loader on submit
+    uploadForm.addEventListener('submit', () => {
+        loaderOverlay.style.display = 'flex';
+        let step = 0;
+        const statusMsgs = [
+            "Initializing secure text streams...",
+            "Extracting document structure (PDF/Word)...",
+            "Filtering punctuation and common English stopwords...",
+            "Computing TF-IDF vector alignments...",
+            "Requesting generative Gemini ATS analytics...",
+            "Formulating candidate improvement reports...",
+            "Writing matches to persistence layer..."
+        ];
+        
+        const statusInterval = setInterval(() => {
+            if (step < statusMsgs.length) {
+                loaderStatus.innerText = statusMsgs[step];
+                step++;
+            } else {
+                clearInterval(statusInterval);
+            }
+        }, 1200);
+    });
+</script>
+{% endblock %}

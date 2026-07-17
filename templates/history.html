@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}TalentScanner - Evaluation Log History{% endblock %}
+
+{% block content %}
+<div class="card" style="padding: 32px;">
+    <div class="card-title" style="margin-bottom: 24px;">
+        <span><i class="bi bi-clock-history" style="color: var(--primary); margin-right: 8px;"></i>Evaluation Logs</span>
+        <span class="badge badge-ai">{{ matches|length }} Assessments</span>
+    </div>
+
+    {% if matches %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Target Position</th>
+                        <th>Candidate File</th>
+                        <th>Parser Engine</th>
+                        <th>Match Fit</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for match in matches %}
+                        <tr>
+                            <td style="color: var(--text-muted); font-size: 13px;">
+                                <i class="bi bi-calendar-event" style="margin-right: 6px;"></i>{{ match.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('main.job_details', job_id=match.job_id) }}" style="font-weight: 600; color: var(--text-primary);">
+                                    {{ match.job.title }}
+                                </a>
+                            </td>
+                            <td style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ match.resume.filename }}">
+                                <i class="bi bi-file-earmark-text" style="color: var(--text-muted); margin-right: 6px;"></i>
+                                {{ match.resume.filename }}
+                            </td>
+                            <td>
+                                {% if 'is_ai_powered' in match.ai_analysis %}
+                                    <span class="badge badge-ai"><i class="bi bi-stars"></i> Gemini AI</span>
+                                {% else %}
+                                    <span class="badge badge-local"><i class="bi bi-cpu"></i> Keywords</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set score = match.similarity_score %}
+                                <span class="score-badge {% if score >= 75 %}score-high{% elif score >= 50 %}score-med{% else %}score-low{% endif %}">
+                                    {{ score|int }}%
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('main.match_report', match_id=match.id) }}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">
+                                    <i class="bi bi-file-text-fill"></i> View Report
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-journal-x"></i></div>
+            <p style="margin-bottom: 8px; font-weight: 500;">No Historical Evaluations</p>
+            <p style="font-size: 13px;">Register a position description and upload resumes to build a historical matching database.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
