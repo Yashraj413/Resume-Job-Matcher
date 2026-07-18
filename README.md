@@ -4,7 +4,7 @@ TalentScanner is an enterprise-grade, production-ready Application Tracking Syst
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 *   **Executive Dashboard:** Centralized metrics representing total active positions, scanned resumes, and average matching scores.
 *   **Pipeline Management:** Initialize individual position requirements and maintain localized, isolated lists of candidates.
@@ -17,7 +17,7 @@ TalentScanner is an enterprise-grade, production-ready Application Tracking Syst
 
 ---
 
-## 📐 System Architecture
+## System Architecture
 
 TalentScanner follows **Clean Architecture** guidelines to isolate business logic, presentation routing, database services, and parser gateways.
 
@@ -74,7 +74,7 @@ graph TD
 
 ---
 
-## ⚙️ Local Setup Guide
+## Local Setup Guide
 
 ### 1. Prerequisites
 *   Python 3.10 or 3.11
@@ -119,7 +119,7 @@ Open `http://localhost:10000` in your web browser.
 
 ---
 
-## 🧪 Running the Test Suite
+## Running the Test Suite
 
 The project includes unit and integration tests covering text parsers, matching formulas, database writes, and web routers. Tests are run using `pytest`.
 
@@ -130,7 +130,7 @@ The project includes unit and integration tests covering text parsers, matching 
 
 ---
 
-## 🔌 API Documentation
+## API Documentation
 
 ### POST `/api/match`
 Programmatically calculates compatibility scores for multiple resumes.
@@ -190,7 +190,7 @@ Useful for uploading binary files directly.
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 The database uses a relational schema defined in `app/models.py`. By default, it runs on SQLite (`resume_matcher.db` in the root directory), but can be configured to target PostgreSQL by updating the `DATABASE_URL` in the environment.
 
@@ -217,7 +217,7 @@ The database uses a relational schema defined in `app/models.py`. By default, it
 
 ---
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 *   **PDF/DOCX Extraction Fails:** If a document fails to parse, TalentScanner catches the exception gracefully per-file. Verify that the file is not password-protected, encrypted, or corrupted.
 *   **AI Reports show "Pattern Mode":** If the dashboard reports "Keyword Pattern" or `is_ai_powered` is false, it means either your `GEMINI_API_KEY` is not loaded, has expired, or the network requests timed out. Check your `.env` configuration.
