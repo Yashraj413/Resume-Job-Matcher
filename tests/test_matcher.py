@@ -1,5 +1,4 @@
 from app.services.matcher import preprocess_text, match_resumes, get_local_insights
-
 def test_preprocess_text():
     """Verify text preprocessing normalizes punctuation, cases, and filters stopwords."""
     raw_text = "Experienced Developer seeking a Python and SQL role! (Hybrid)"
