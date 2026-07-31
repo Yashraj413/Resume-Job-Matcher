@@ -56,8 +56,7 @@ def extract_text(filename, file_stream):
     
     # Ensure stream is reset to the beginning if it supports seek
     if hasattr(file_stream, 'seek'):
-        file_stream.seek(0)
-        
+        file_stream.seek(0)  
     if ext == 'pdf':
         return extract_text_from_pdf(file_stream)
     elif ext == 'docx':
