@@ -91,10 +91,8 @@ def get_local_insights(job_desc, resume_text):
         
     job_words = set(re.findall(r'\b[a-z]{3,}\b', job_desc.lower())) - STOPWORDS
     resume_words = set(re.findall(r'\b[a-z]{3,}\b', resume_text.lower())) - STOPWORDS
-    
     matched = sorted(list(job_words.intersection(resume_words)))
-    missing = sorted(list(job_words - resume_words))
-    
+    missing = sorted(list(job_words - resume_words)) 
     return {
         'matched_keywords': matched[:20],  # Return top 20 keywords
         'missing_keywords': missing[:20],  # Return top 20 missing keywords
