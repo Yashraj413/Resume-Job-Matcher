@@ -15,11 +15,9 @@ def test_extract_text_from_pdf(mock_pdf_reader):
     """Verify that PDF parsing behaves correctly using mock pages."""
     mock_page = MagicMock()
     mock_page.extract_text.return_value = "PDF Candidate Profile Details"
-    
     mock_reader_instance = MagicMock()
     mock_reader_instance.pages = [mock_page]
     mock_pdf_reader.return_value = mock_reader_instance
-    
     stream = io.BytesIO(b"mock pdf binary stream")
     text = extract_text("resume.pdf", stream)
     assert "PDF Candidate Profile Details" in text
