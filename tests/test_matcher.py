@@ -10,8 +10,8 @@ def test_preprocess_text():
     assert "sql" in tokens
     assert "role" in tokens
     assert "hybrid" in tokens
-    
-    # Verify stopwords are removed
+                   
+    # Verify stopwords are removed  
     assert "and" not in tokens
     assert "a" not in tokens
 
